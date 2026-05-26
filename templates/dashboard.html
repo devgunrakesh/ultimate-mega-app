@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🌌 ULTIMATE MEGA APP - Cosmic Edition</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a2a 0%, #1a0a3a 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(10, 10, 40, 0.95);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 1px solid #667eea;
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            padding: 25px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            border-bottom: 1px solid #333;
+        }
+
+        .category {
+            padding: 15px 20px 5px;
+            color: #667eea;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 10px 20px;
+            color: #ccc;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(102,126,234,0.2);
+            color: white;
+            padding-left: 30px;
+        }
+
+        .content {
+            margin-left: 280px;
+            padding: 20px;
+        }
+
+        .module-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid rgba(102,126,234,0.3);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-module { display: block; }
+
+        .module-card h3 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            color: white;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 5px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+        }
+
+        .result-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .board button {
+            width: 100px;
+            height: 100px;
+            font-size: 48px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .chat-container {
+            height: 300px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 20px;
+            display: inline-block;
+            max-width: 70%;
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, rgba(102,126,234,0.2), rgba(118,75,162,0.2));
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <h2>🌌 ULTIMATE<br>MEGA APP</h2>
+
+    <div class="category">🌀 QUANTUM REALM</div>
+    <a onclick="showModule('dream')"><i class="fas fa-moon"></i> Dream Portal</a>
+    <a onclick="showModule('quantum')"><i class="fas fa-atom"></i> Quantum Reality</a>
+    <a onclick="showModule('consciousness')"><i class="fas fa-brain"></i> Consciousness AI</a>
+    <a onclick="showModule('aura')"><i class="fas fa-eye"></i> Aura Reader</a>
+    <a onclick="showModule('synchronicity')"><i class="fas fa-sync-alt"></i> Synchronicity</a>
+    <a onclick="showModule('cosmic')"><i class="fas fa-satellite-dish"></i> Cosmic Message</a>
+
+    <div class="category">💫 SOUL JOURNEY</div>
+    <a onclick="showModule('soul')"><i class="fas fa-chart-line"></i> Soul Score</a>
+    <a onclick="showModule('spirit')"><i class="fas fa-dove"></i> Spirit Animal</a>
+    <a onclick="showModule('pastlife')"><i class="fas fa-history"></i> Past Life</a>
+    <a onclick="showModule('lucid')"><i class="fas fa-cloud-moon"></i> Lucid Dream</a>
+    <a onclick="showModule('manifest')"><i class="fas fa-star-of-life"></i> Manifestation</a>
+    <a onclick="showModule('karma')"><i class="fas fa-balance-scale"></i> Karma</a>
+
+    <div class="category">🎮 GAMES</div>
+    <a onclick="showModule('tictactoe')"><i class="fas fa-gamepad"></i> Tic-Tac-Toe</a>
+    <a onclick="showModule('snake')"><i class="fas fa-dragon"></i> Snake Game</a>
+
+    <div class="category">📋 MANAGEMENT</div>
+    <a onclick="showModule('school')"><i class="fas fa-school"></i> School</a>
+    <a onclick="showModule('hospital')"><i class="fas fa-hospital"></i> Hospital</a>
+    <a onclick="showModule('finance')"><i class="fas fa-chart-line"></i> Finance</a>
+    <a onclick="showModule('todo')"><i class="fas fa-check-square"></i> To-Do List</a>
+    <a onclick="showModule('blog')"><i class="fas fa-blog"></i> Blog</a>
+
+    <div class="category">🔧 TOOLS</div>
+    <a onclick="showModule('weather')"><i class="fas fa-cloud-sun"></i> Weather</a>
+    <a onclick="showModule('chatbot')"><i class="fas fa-robot"></i> Chatbot</a>
+    <a onclick="showModule('qr')"><i class="fas fa-qrcode"></i> QR Code</a>
+    <a onclick="showModule('translate')"><i class="fas fa-language"></i> Translate</a>
+    <a onclick="showModule('tts')"><i class="fas fa-volume-up"></i> Text-to-Speech</a>
+    <a onclick="showModule('shorten')"><i class="fas fa-link"></i> URL Shortener</a>
+    <a onclick="showModule('password')"><i class="fas fa-lock"></i> Password Manager</a>
+</div>
+
+<div class="content">
+    <!-- Welcome -->
+    <div id="welcome" class="module-card active-module">
+        <h3>🌌 Welcome to the Ultimate Mega App</h3>
+        <p>50+ unique features including quantum AI, dream interpretation, and cosmic guidance!</p>
+        <div class="grid-3" style="margin-top: 20px;">
+            <div class="welcome-card">
+                <h2>🔮</h2>
+                <p>Dream Portal</p>
+            </div>
+            <div class="welcome-card">
+                <h2>⚛️</h2>
+                <p>Quantum AI</p>
+            </div>
+            <div class="welcome-card">
+                <h2>✨</h2>
+                <p>Cosmic Energy</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dream Portal -->
+    <div id="dream" class="module-card">
+        <h3>🔮 Dream Portal</h3>
+        <textarea id="dream_text" rows="4" placeholder="Describe your dream..."></textarea>
+        <button onclick="interpretDream()">Interpret Dream</button>
+        <div id="dream_result" class="result-box"></div>
+    </div>
+
+    <!-- Quantum Reality -->
+    <div id="quantum" class="module-card">
+        <h3>⚛️ Quantum Reality</h3>
+        <input type="text" id="quantum_decision" placeholder="Enter a decision...">
+        <button onclick="exploreReality()">Explore Timeline</button>
+        <div id="quantum_result" class="result-box"></div>
+    </div>
+
+    <!-- Consciousness AI -->
+    <div id="consciousness" class="module-card">
+        <h3>🧠 Consciousness AI</h3>
+        <textarea id="consciousness_question" rows="3" placeholder="Ask the universe..."></textarea>
+        <button onclick="askConsciousness()">Ask Universe</button>
+        <div id="consciousness_result" class="result-box"></div>
+    </div>
+
+    <!-- Aura Reader -->
+    <div id="aura" class="module-card">
+        <h3>🌈 Aura Reader</h3>
+        <textarea id="aura_text" rows="3" placeholder="Describe your mood..."></textarea>
+        <button onclick="readAura()">Read Aura</button>
+        <div id="aura_result" class="result-box"></div>
+    </div>
+
+    <!-- Synchronicity -->
+    <div id="synchronicity" class="module-card">
+        <h3>🔄 Synchronicity Detector</h3>
+        <textarea id="sync_events" rows="3" placeholder="Recent meaningful events..."></textarea>
+        <button onclick="detectSynchronicity()">Detect Patterns</button>
+        <div id="sync_result" class="result-box"></div>
+    </div>
+
+    <!-- Cosmic Message -->
+    <div id="cosmic" class="module-card">
+        <h3>📡 Cosmic Message</h3>
+        <button onclick="getCosmicMessage()">Receive Message</button>
+        <div id="cosmic_result" class="result-box"></div>
+    </div>
+
+    <!-- Soul Score -->
+    <div id="soul" class="module-card">
+        <h3>💫 Soul Score</h3>
+        <input type="number" id="good_deeds" placeholder="Good deeds">
+        <input type="number" id="bad_deeds" placeholder="Bad deeds">
+        <button onclick="calculateSoulScore()">Calculate Soul Score</button>
+        <div id="soul_result" class="result-box"></div>
+    </div>
+
+    <!-- Spirit Animal -->
+    <div id="spirit" class="module-card">
+        <h3>🦋 Spirit Animal</h3>
+        <button onclick="getSpiritAnimal()">Find Spirit Animal</button>
+        <div id="spirit_result" class="result-box"></div>
+    </div>
+
+    <!-- Past Life -->
+    <div id="pastlife" class="module-card">
+        <h3>📜 Past Life</h3>
+        <input type="text" id="past_fears" placeholder="Your fears...">
+        <button onclick="pastLifeRegression()">Explore Past Life</button>
+        <div id="pastlife_result" class="result-box"></div>
+    </div>
+
+    <!-- Lucid Dream -->
+    <div id="lucid" class="module-card">
+        <h3>💭 Lucid Dream Trainer</h3>
+        <button onclick="getLucidTechnique()">Get Technique</button>
+        <div id="lucid_result" class="result-box"></div>
+    </div>
+
+    <!-- Manifestation -->
+    <div id="manifest" class="module-card">
+        <h3>✨ Manifestation</h3>
+        <input type="text" id="desire" placeholder="What you want to manifest...">
+        <button onclick="generateManifestation()">Generate</button>
+        <div id="manifest_result" class="result-box"></div>
+    </div>
+
+    <!-- Karma -->
+    <div id="karma" class="module-card">
+        <h3>⚖️ Karma Calculator</h3>
+        <input type="text" id="karma_actions" placeholder="Your actions...">
+        <button onclick="calculateKarma()">Calculate Karma</button>
+        <div id="karma_result" class="result-box"></div>
+    </div>
+
+    <!-- School -->
+    <div id="school" class="module-card">
+        <h3>🏫 School Management</h3>
+        <div class="grid-2">
+            <div>
+                <input type="text" id="student_name" placeholder="Student Name">
+                <input type="text" id="student_class" placeholder="Class">
+                <button onclick="addStudent()">Add Student</button>
+            </div>
+            <div>
+                <button onclick="listStudents()">List Students</button>
+                <div id="student_list" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hospital -->
+    <div id="hospital" class="module-card">
+        <h3>🏥 Hospital Management</h3>
+        <div class="grid-2">
+            <div>
+                <input type="text" id="patient_name" placeholder="Patient Name">
+                <input type="text" id="patient_disease" placeholder="Disease">
+                <input type="text" id="patient_room" placeholder="Room">
+                <button onclick="addPatient()">Add Patient</button>
+            </div>
+            <div>
+                <button onclick="listPatients()">List Patients</button>
+                <div id="patient_list" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Finance -->
+    <div id="finance" class="module-card">
+        <h3>💰 Finance Tracker</h3>
+        <div class="grid-2">
+            <div>
+                <input type="number" id="amount" placeholder="Amount (+/-)">
+                <input type="text" id="category" placeholder="Category">
+                <button onclick="addTransaction()">Add</button>
+            </div>
+            <div>
+                <button onclick="getTransactions()">View Summary</button>
+                <div id="finance_result" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- To-Do -->
+    <div id="todo" class="module-card">
+        <h3>✅ To-Do List</h3>
+        <div class="grid-2">
+            <div>
+                <input type="text" id="todo_task" placeholder="Task">
+                <button onclick="addTodo()">Add Task</button>
+            </div>
+            <div>
+                <button onclick="listTodos()">View Tasks</button>
+                <div id="todo_list" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog -->
+    <div id="blog" class="module-card">
+        <h3>📝 Blog CMS</h3>
+        <div class="grid-2">
+            <div>
+                <input type="text" id="blog_title" placeholder="Title">
+                <textarea id="blog_content" rows="3" placeholder="Content"></textarea>
+                <button onclick="createPost()">Create Post</button>
+            </div>
+            <div>
+                <button onclick="listPosts()">View Posts</button>
+                <div id="blog_list" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather -->
+    <div id="weather" class="module-card">
+        <h3>🌤️ Cosmic Weather</h3>
+        <input type="text" id="weather_city" placeholder="City name">
+        <button onclick="getWeather()">Get Weather</button>
+        <div id="weather_result" class="result-box"></div>
+    </div>
+
+    <!-- Chatbot -->
+    <div id="chatbot" class="module-card">
+        <h3>🤖 Galactic Chatbot</h3>
+        <div id="chatbot_messages" class="chat-container"></div>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="chatbot_input" placeholder="Ask me..." style="flex:1">
+            <button onclick="sendChatbotMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- QR Code -->
+    <div id="qr" class="module-card">
+        <h3>📱 QR Code Generator</h3>
+        <input type="text" id="qr_text" placeholder="Text or URL">
+        <button onclick="generateQR()">Generate QR</button>
+        <div id="qr_result" class="result-box" style="text-align:center"></div>
+    </div>
+
+    <!-- Translator -->
+    <div id="translate" class="module-card">
+        <h3>🌐 Translator</h3>
+        <textarea id="translate_text" rows="3" placeholder="Text to translate..."></textarea>
+        <select id="translate_lang">
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="hi">Hindi</option>
+            <option value="ja">Japanese</option>
+        </select>
+        <button onclick="translateText()">Translate</button>
+        <div id="translate_result" class="result-box"></div>
+    </div>
+
+    <!-- TTS -->
+    <div id="tts" class="module-card">
+        <h3>🔊 Text-to-Speech</h3>
+        <textarea id="tts_text" rows="3" placeholder="Text to speak..."></textarea>
+        <button onclick="generateSpeech()">Generate Speech</button>
+        <div id="tts_result" class="result-box"></div>
+    </div>
+
+    <!-- URL Shortener -->
+    <div id="shorten" class="module-card">
+        <h3>🔗 URL Shortener</h3>
+        <input type="url" id="long_url" placeholder="Long URL">
+        <button onclick="shortenURL()">Shorten</button>
+        <div id="shorten_result" class="result-box"></div>
+    </div>
+
+    <!-- Password Manager -->
+    <div id="password" class="module-card">
+        <h3>🔐 Password Manager</h3>
+        <div class="grid-2">
+            <div>
+                <input type="text" id="pwd_website" placeholder="Website">
+                <input type="text" id="pwd_username" placeholder="Username">
+                <input type="password" id="pwd_password" placeholder="Password">
+                <button onclick="savePassword()">Save</button>
+            </div>
+            <div>
+                <button onclick="listPasswords()">View Saved</button>
+                <div id="password_list" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tic Tac Toe -->
+    <div id="tictactoe" class="module-card">
+        <h3>🎮 Tic-Tac-Toe</h3>
+        <div class="board" id="ttt_board"></div>
+        <div style="text-align:center"><button onclick="resetGame()">Reset Game</button></div>
+        <div id="ttt_result" class="result-box"></div>
+    </div>
+
+    <!-- Snake Game -->
+    <div id="snake" class="module-card">
+        <h3>🐍 Snake Game</h3>
+        <canvas id="snakeCanvas" width="400" height="400" style="border:2px solid #667eea;border-radius:10px"></canvas>
+        <div style="margin-top:10px">
+            <p>Score: <span id="snakeScore">0</span></p>
+            <button onclick="startSnakeGame()">Start Game</button>
+            <button onclick="getSnakeLeaderboard()">High Scores</button>
+        </div>
+        <div id="snake_scores" class="result-box"></div>
+    </div>
+</div>
+
+<script>
+let socket = io();
+let gameBoard = [['','',''],['','',''],['','','']];
+let gameWinner = null;
+let currentPlayer = 'X';
+
+// ============ NAVIGATION ============
+function showModule(moduleId) {
+    $('.module-card').removeClass('active-module');
+    $(`#${moduleId}`).addClass('active-module');
+    if(moduleId === 'tictactoe') renderBoard();
+    if(moduleId === 'school') listStudents();
+    if(moduleId === 'hospital') listPatients();
+    if(moduleId === 'todo') listTodos();
+    if(moduleId === 'blog') listPosts();
+    if(moduleId === 'password') listPasswords();
+}
+
+// ============ DREAM ============
+function interpretDream() {
+    const dream = $('#dream_text').val();
+    if(!dream) { alert('Describe your dream'); return; }
+    $('#dream_result').html('<div class="loading"></div> Interpreting...');
+    $.post('/api/dream/interpret', {dream: dream}, (res) => {
+        $('#dream_result').html(`
+            <strong>🔮 Symbols:</strong> ${res.symbols.join(', ')}<br>
+            <strong>📖 Meanings:</strong> ${res.meanings.join(', ')}<br>
+            <strong>💫 Emotional Tone:</strong> ${res.emotional_tone}<br>
+            <strong>✨ Lucidity:</strong> ${res.lucidity}%<br>
+            <strong>💌 Message:</strong> ${res.message}
+        `);
+    });
+}
+
+// ============ QUANTUM ============
+function exploreReality() {
+    const decision = $('#quantum_decision').val();
+    if(!decision) { alert('Enter a decision'); return; }
+    $('#quantum_result').html('<div class="loading"></div> Navigating multiverse...');
+    $.post('/api/quantum/reality', {decision: decision}, (res) => {
+        $('#quantum_result').html(`
+            <strong>🌌 Timeline:</strong> ${res.timeline}<br>
+            <strong>📊 Probability:</strong> ${res.probability}%<br>
+            <strong>⚡ Quantum State:</strong> ${res.quantum_state}<br>
+            <strong>🌠 Multiverse ID:</strong> ${res.multiverse_id}
+        `);
+    });
+}
+
+// ============ CONSCIOUSNESS ============
+function askConsciousness() {
+    const question = $('#consciousness_question').val();
+    if(!question) { alert('Ask the universe'); return; }
+    $('#consciousness_result').html('<div class="loading"></div> Channeling...');
+    $.post('/api/consciousness/ask', {question: question}, (res) => {
+        $('#consciousness_result').html(`
+            <strong>🧠 Response:</strong> ${res.response}<br>
+            <strong>⚡ Vibration:</strong> ${res.vibration}%<br>
+            <strong>🌌 Channel:</strong> ${res.channel}
+        `);
+    });
+}
+
+// ============ AURA ============
+function readAura() {
+    const text = $('#aura_text').val();
+    if(!text) { alert('Describe your mood'); return; }
+    $('#aura_result').html('<div class="loading"></div> Scanning aura...');
+    $.post('/api/aura/read', {text: text}, (res) => {
+        $('#aura_result').html(`
+            <div style="text-align:center"><img src="data:image/png;base64,${res.aura_art}" style="max-width:150px"></div>
+            <strong>🎨 Primary Aura:</strong> ${res.primary_aura}<br>
+            <strong>✨ Secondary:</strong> ${res.secondary_aura}<br>
+            <strong>📖 Meaning:</strong> ${res.meaning}<br>
+            <strong>⚡ Vibration:</strong> ${res.vibration}%
+        `);
+    });
+}
+
+// ============ SYNCHRONICITY ============
+function detectSynchronicity() {
+    const events = $('#sync_events').val().split('\n');
+    $('#sync_result').html('<div class="loading"></div> Detecting patterns...');
+    $.post('/api/synchronicity/detect', {events: events}, (res) => {
+        $('#sync_result').html(`
+            <strong>📊 Score:</strong> ${res.score}%<br>
+            <strong>💫 Message:</strong> ${res.message}<br>
+            ${res.angel_number ? `<strong>🔢 Angel Number:</strong> ${res.angel_number}` : ''}
+        `);
+    });
+}
+
+// ============ COSMIC MESSAGE ============
+function getCosmicMessage() {
+    $('#cosmic_result').html('<div class="loading"></div> Receiving...');
+    $.get('/api/cosmic/message', (res) => {
+        $('#cosmic_result').html(`
+            <strong>📡 "${res.message}"</strong><br>
+            <strong>🌟 Source:</strong> ${res.source}<br>
+            <strong>⚡ Urgency:</strong> ${res.urgency}
+        `);
+    });
+}
+
+// ============ SOUL SCORE ============
+function calculateSoulScore() {
+    const good = $('#good_deeds').val() || 0;
+    const bad = $('#bad_deeds').val() || 0;
+    $('#soul_result').html('<div class="loading"></div> Calculating...');
+    $.post('/api/soul/score', {good_deeds: good, bad_deeds: bad}, (res) => {
+        $('#soul_result').html(`
+            <strong>💫 Soul Score:</strong> ${res.score}<br>
+            <strong>🏆 Level:</strong> ${res.level}<br>
+            <strong>💡 Message:</strong> ${res.message}
+        `);
+    });
+}
+
+// ============ SPIRIT ANIMAL ============
+function getSpiritAnimal() {
+    $('#spirit_result').html('<div class="loading"></div> Connecting...');
+    $.get('/api/spirit/animal', (res) => {
+        $('#spirit_result').html(`
+            <strong>🦋 Spirit Animal:</strong> ${res.animal}<br>
+            <strong>📖 Meaning:</strong> ${res.meaning}<br>
+            <strong>💫 Message:</strong> ${res.message}<br>
+            <strong>⚡ Power:</strong> ${res.power}%
+        `);
+    });
+}
+
+// ============ PAST LIFE ============
+function pastLifeRegression() {
+    const fears = $('#past_fears').val();
+    $('#pastlife_result').html('<div class="loading"></div> Accessing akashic records...');
+    $.post('/api/pastlife/regression', {fears: fears.split(',')}, (res) => {
+        $('#pastlife_result').html(`
+            <strong>🌍 Era:</strong> ${res.era}<br>
+            <strong>👑 Role:</strong> ${res.role}<br>
+            <strong>📚 Lesson:</strong> ${res.lesson}
+        `);
+    });
+}
+
+// ============ LUCID DREAM ============
+function getLucidTechnique() {
+    $('#lucid_result').html('<div class="loading"></div> Generating...');
+    $.post('/api/lucid/technique', {}, (res) => {
+        $('#lucid_result').html(`
+            <strong>📖 Technique:</strong> ${res.technique}<br>
+            <strong>📈 Success Rate:</strong> ${res.success_rate}<br>
+            <strong>🔮 Mantra:</strong> "${res.mantra}"
+        `);
+    });
+}
+
+// ============ MANIFESTATION ============
+function generateManifestation() {
+    const desire = $('#desire').val();
+    if(!desire) { alert('What do you want to manifest?'); return; }
+    $('#manifest_result').html('<div class="loading"></div> Aligning...');
+    $.post('/api/manifest/generate', {desire: desire}, (res) => {
+        $('#manifest_result').html(`
+            <strong>✨ "${res.statement}"</strong><br>
+            <strong>🔊 Frequency:</strong> ${res.frequency}<br>
+            <strong>💎 Crystal:</strong> ${res.crystal}
+        `);
+    });
+}
+
+// ============ KARMA ============
+function calculateKarma() {
+    const actions = $('#karma_actions').val().split(',').map(a => a.trim().toLowerCase());
+    $('#karma_result').html('<div class="loading"></div> Weighing karma...');
+    $.post('/api/karma/calculate', {actions: actions}, (res) => {
+        $('#karma_result').html(`
+            <strong>⚖️ Karma Score:</strong> ${res.score}<br>
+            <strong>🏆 Level:</strong> ${res.level}<br>
+            <strong>💡 Advice:</strong> ${res.advice}
+        `);
+    });
+}
+
+// ============ SCHOOL ============
+function addStudent() {
+    $.post('/api/students', {name: $('#student_name').val(), class: $('#student_class').val()}, () => {
+        $('#student_name').val(''); $('#student_class').val(''); listStudents();
+    });
+}
+function listStudents() {
+    $.get('/api/students', (students) => {
+        let html = '<ul>'; students.forEach(s => html += `<li>${s.name} - Class ${s.class} (Attendance: ${s.attendance})</li>`);
+        html += '</ul>'; $('#student_list').html(html);
+    });
+}
+
+// ============ HOSPITAL ============
+function addPatient() {
+    $.post('/api/patients', {name: $('#patient_name').val(), disease: $('#patient_disease').val(), room: $('#patient_room').val()}, () => {
+        $('#patient_name').val(''); $('#patient_disease').val(''); $('#patient_room').val(''); listPatients();
+    });
+}
+function listPatients() {
+    $.get('/api/patients', (patients) => {
+        let html = '<ul>'; patients.forEach(p => html += `<li>${p.name} - ${p.disease} (Room ${p.room})</li>`);
+        html += '</ul>'; $('#patient_list').html(html);
+    });
+}
+
+// ============ FINANCE ============
+function addTransaction() {
+    $.post('/api/transactions', {amount: parseFloat($('#amount').val()), category: $('#category').val()}, () => {
+        $('#amount').val(''); $('#category').val(''); getTransactions();
+    });
+}
+function getTransactions() {
+    $.get('/api/transactions', (data) => {
+        $('#finance_result').html(`<strong>💰 Balance:</strong> ₹${data.balance}<br><strong>📋 Recent:</strong><ul>${data.transactions.map(t => `<li>₹${t.amount} - ${t.category}</li>`).join('')}</ul>`);
+    });
+}
+
+// ============ TO-DO ============
+function addTodo() {
+    $.post('/api/todos', {task: $('#todo_task').val()}, () => { $('#todo_task').val(''); listTodos(); });
+}
+function listTodos() {
+    $.get('/api/todos', (todos) => {
+        let html = '<ul>'; todos.forEach(t => html += `<li>${t.completed ? '✅' : '⭕'} ${t.task} <button onclick="toggleTodo(${t.id})">Toggle</button></li>`);
+        html += '</ul>'; $('#todo_list').html(html);
+    });
+}
+function toggleTodo(id) {
+    $.ajax({url: `/api/todos/${id}/toggle`, type: 'PUT', success: () => listTodos()});
+}
+
+// ============ BLOG ============
+function createPost() {
+    $.post('/api/blog/posts', {title: $('#blog_title').val(), content: $('#blog_content').val()}, () => {
+        $('#blog_title').val(''); $('#blog_content').val(''); listPosts();
+    });
+}
+function listPosts() {
+    $.get('/api/blog/posts', (posts) => {
+        let html = ''; posts.forEach(p => html += `<div><strong>${p.title}</strong><br><small>by ${p.author}</small><p>${p.content}...</p><hr></div>`);
+        $('#blog_list').html(html || 'No posts');
+    });
+}
+
+// ============ WEATHER ============
+function getWeather() {
+    const city = $('#weather_city').val();
+    if(!city) { alert('Enter city'); return; }
+    $('#weather_result').html('<div class="loading"></div> Getting cosmic weather...');
+    $.get(`/api/weather/${city}`, (res) => {
+        $('#weather_result').html(`
+            <strong>🌌 ${res.city}</strong><br>
+            ☁️ ${res.condition}<br>
+            🌡️ ${res.temperature}°C<br>
+            ⚡ Energy: ${res.energy}
+        `);
+    });
+}
+
+// ============ CHATBOT ============
+function sendChatbotMessage() {
+    const msg = $('#chatbot_input').val();
+    if(!msg) return;
+    $('#chatbot_messages').append(`<div class="message">You: ${msg}</div>`);
+    $('#chatbot_input').val('');
+    $.post('/api/chatbot/message', {message: msg}, (res) => {
+        $('#chatbot_messages').append(`<div class="message" style="background:#764ba2">🤖 ${res.response}</div>`);
+        $('#chatbot_messages').scrollTop($('#chatbot_messages')[0].scrollHeight);
+    });
+}
+
+// ============ QR CODE ============
+function generateQR() {
+    const text = $('#qr_text').val();
+    if(!text) { alert('Enter text'); return; }
+    $('#qr_result').html('<div class="loading"></div> Generating...');
+    $.post('/api/qr/generate', {text: text}, (res) => {
+        $('#qr_result').html(`<img src="data:image/png;base64,${res.qr_image}" style="max-width:200px">`);
+    });
+}
+
+// ============ TRANSLATOR ============
+function translateText() {
+    const text = $('#translate_text').val();
+    const target = $('#translate_lang').val();
+    if(!text) { alert('Enter text'); return; }
+    $('#translate_result').html('<div class="loading"></div> Translating...');
+    $.post('/api/translate', {text: text, target: target}, (res) => {
+        $('#translate_result').html(`
+            <strong>Original:</strong> ${res.original}<br>
+            <strong>Translated:</strong> ${res.translated}
+        `);
+    });
+}
+
+// ============ TEXT TO SPEECH ============
+function generateSpeech() {
+    const text = $('#tts_text').val();
+    if(!text) { alert('Enter text'); return; }
+    $('#tts_result').html('<div class="loading"></div> Generating...');
+    $.post('/api/tts/generate', {text: text}, (res) => {
+        $('#tts_result').html(`<audio controls><source src="${res.url}"></audio>`);
+    });
+}
+
+// ============ URL SHORTENER ============
+function shortenURL() {
+    const url = $('#long_url').val();
+    if(!url) { alert('Enter URL'); return; }
+    $('#shorten_result').html('<div class="loading"></div> Shortening...');
+    $.post('/api/shorten', {url: url}, (res) => {
+        $('#shorten_result').html(`<strong>Short URL:</strong> <a href="${res.short_url}">${res.short_url}</a>`);
+    });
+}
+
+// ============ PASSWORD MANAGER ============
+function savePassword() {
+    $.post('/api/passwords', {
+        website: $('#pwd_website').val(),
+        username: $('#pwd_username').val(),
+        password: $('#pwd_password').val()
+    }, () => {
+        $('#pwd_website').val(''); $('#pwd_username').val(''); $('#pwd_password').val(''); listPasswords();
+    });
+}
+function listPasswords() {
+    $.get('/api/passwords', (entries) => {
+        let html = '<ul>'; entries.forEach(e => html += `<li><strong>${e.website}</strong> - ${e.username}</li>`);
+        html += '</ul>'; $('#password_list').html(html);
+    });
+}
+
+// ============ TIC TAC TOE ============
+function renderBoard() {
+    let html = '';
+    for(let i=0;i<3;i++) {
+        for(let j=0;j<3;j++) {
+            html += `<button onclick="makeMove(${i},${j})">${gameBoard[i][j] || '⚡'}</button>`;
+        }
+    }
+    $('#ttt_board').html(html);
+}
+function makeMove(row, col) {
+    if(gameWinner) { $('#ttt_result').html(`Game Over! Winner: ${gameWinner}`); return; }
+    $.post('/api/tic-tac-toe/move', {row: row, col: col, player: currentPlayer}, (res) => {
+        if(!res.error) {
+            gameBoard = res.board; gameWinner = res.winner; renderBoard();
+            if(gameWinner) { $('#ttt_result').html(gameWinner === 'Draw' ? "🌌 Draw!" : `🎉 Winner: ${gameWinner}`); }
+            else { currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; $('#ttt_result').html(`Player: ${currentPlayer}`); }
+        }
+    });
+}
+function resetGame() {
+    $.post('/api/tic-tac-toe/reset', {}, (res) => {
+        gameBoard = res.board; gameWinner = null; currentPlayer = 'X'; renderBoard(); $('#ttt_result').html('Game reset! X goes first');
+    });
+}
+
+// ============ SNAKE GAME ============
+let snakeCanvas, snakeCtx, snake = [{x:200,y:200}], snakeDir='RIGHT', snakeFood={x:100,y:100}, snakeScore=0, snakeLoop=null;
+function initSnake() {
+    snakeCanvas = document.getElementById('snakeCanvas');
+    if(!snakeCanvas) return;
+    snakeCtx = snakeCanvas.getContext('2d');
+    drawSnake();
+}
+function drawSnake() {
+    if(!snakeCtx) return;
+    snakeCtx.fillStyle='#0a0a14'; snakeCtx.fillRect(0,0,400,400);
+    snakeCtx.fillStyle='#667eea'; snake.forEach(s => snakeCtx.fillRect(s.x,s.y,18,18));
+    snakeCtx.fillStyle='#764ba2'; snakeCtx.fillRect(snakeFood.x,snakeFood.y,18,18);
+}
+function updateSnake() {
+    let head = {...snake[0]};
+    if(snakeDir==='RIGHT') head.x+=20; else if(snakeDir==='LEFT') head.x-=20;
+    else if(snakeDir==='UP') head.y-=20; else if(snakeDir==='DOWN') head.y+=20;
+    snake.unshift(head);
+    if(head.x===snakeFood.x && head.y===snakeFood.y) {
+        snakeScore+=10; $('#snakeScore').text(snakeScore);
+        snakeFood={x:Math.floor(Math.random()*20)*20, y:Math.floor(Math.random()*20)*20};
+    } else { snake.pop(); }
+    if(head.x<0||head.x>=400||head.y<0||head.y>=400||snake.slice(1).some(s=>s.x===head.x&&s.y===head.y)) {
+        clearInterval(snakeLoop); snakeLoop=null;
+        $.post('/api/snake/score', {score:snakeScore, player:'Player'});
+        alert(`Game Over! Score: ${snakeScore}`); resetSnakeGame();
+        return;
+    }
+    drawSnake();
+}
+function resetSnakeGame() {
+    snake=[{x:200,y:200},{x:180,y:200},{x:160,y:200}]; snakeDir='RIGHT'; snakeScore=0; $('#snakeScore').text(snakeScore); drawSnake();
+}
+function startSnakeGame() {
+    if(snakeLoop) clearInterval(snakeLoop);
+    resetSnakeGame();
+    snakeLoop=setInterval(updateSnake,150);
+    $(document).off('keydown').on('keydown', (e) => {
+        if(e.key==='ArrowRight' && snakeDir!=='LEFT') snakeDir='RIGHT';
+        else if(e.key==='ArrowLeft' && snakeDir!=='RIGHT') snakeDir='LEFT';
+        else if(e.key==='ArrowUp' && snakeDir!=='DOWN') snakeDir='UP';
+        else if(e.key==='ArrowDown' && snakeDir!=='UP') snakeDir='DOWN';
+    });
+}
+function getSnakeLeaderboard() {
+    $.get('/api/snake/scores', (scores) => {
+        let html='<h4>🏆 Top Scores</h4><ul>';
+        scores.forEach(s=>html+=`<li>${s.player}: ${s.score}</li>`);
+        html+='</ul>'; $('#snake_scores').html(html);
+    });
+}
+
+// ============ INIT ============
+$(document).ready(() => {
+    initSnake(); renderBoard(); showModule('welcome');
+});
+</script>
+</body>
+</html>
