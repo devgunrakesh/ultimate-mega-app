@@ -2,8 +2,10 @@ services:
   - type: web
     name: ultimate-mega-app
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app --worker-class eventlet
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11.9

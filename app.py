@@ -1,17 +1,13 @@
 """
-🌌 ULTIMATE MEGA APP v6.0 - FULLY WORKING
-Complete working backend for Google Play deployment
+🌌 ULTIMATE MEGA APP - FULLY WORKING VERSION
+Deployment ready for Render/PythonAnywhere
 """
 
 import os
-import re
-import json
-import base64
 import secrets
 import random
-import sqlite3
+import base64
 from datetime import datetime
-from functools import wraps
 from io import BytesIO
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_socketio import SocketIO, emit
@@ -22,7 +18,6 @@ from PIL import Image, ImageDraw
 import qrcode
 from textblob import TextBlob
 import requests
-from bs4 import BeautifulSoup
 from gtts import gTTS
 
 load_dotenv()
@@ -42,11 +37,6 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)
 
 # ============ DATABASE MODELS ============
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True)
-    email = db.Column(db.String(120), unique=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Dream(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,7 +56,6 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     task = db.Column(db.String(200))
     completed = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -99,7 +88,7 @@ class ShortURL(db.Model):
     short_code = db.Column(db.String(20), unique=True)
     clicks = db.Column(db.Integer, default=0)
 
-# ============ API ROUTES ============
+# ============ ROUTES ============
 
 @app.route('/')
 def index():
@@ -126,8 +115,7 @@ def interpret_dream():
         'teeth': 'Communication issues, insecurity',
         'death': 'Transformation, new beginnings',
         'snake': 'Healing, hidden wisdom',
-        'house': 'Self, mind, inner world',
-        'car': 'Life direction, control'
+        'house': 'Self, mind, inner world'
     }
 
     found_symbols = []
@@ -142,10 +130,8 @@ def interpret_dream():
         found_symbols = ['unique dream']
         meanings = ['Your dream contains personal symbols']
 
-    from textblob import TextBlob
     blob = TextBlob(dream)
     sentiment = blob.sentiment.polarity
-
     lucidity = min(len(dream.split()) / 100, 1.0) * 100
 
     return jsonify({
@@ -153,7 +139,7 @@ def interpret_dream():
         'meanings': meanings[:3],
         'emotional_tone': 'positive' if sentiment > 0 else 'negative' if sentiment < 0 else 'neutral',
         'lucidity': round(lucidity, 1),
-        'message': 'Your subconscious is communicating with you through these symbols'
+        'message': 'Your subconscious is communicating through these symbols'
     })
 
 # Quantum Reality
@@ -185,8 +171,7 @@ def consciousness_ask():
         "The universe is guiding you toward your highest path",
         "Trust your intuition - it's speaking to you",
         "Every moment is an opportunity for growth",
-        "You are exactly where you need to be",
-        "Your energy creates your reality"
+        "You are exactly where you need to be"
     ]
 
     return jsonify({
@@ -256,8 +241,7 @@ def cosmic_message():
         "Trust the timing of your life",
         "You are exactly where you need to be",
         "The universe has your back",
-        "Your intuition is your greatest guide",
-        "Magic happens outside your comfort zone"
+        "Your intuition is your greatest guide"
     ]
 
     return jsonify({
@@ -276,7 +260,7 @@ def soul_score():
     score = 500 + good * 10 - bad * 15
     score = max(0, min(score, 1000))
 
-    level = 'Enlightened' if score > 800 else 'High Vibration' if score > 600 else 'Balanced' if score > 400 else 'Growing'
+    level = 'Enlightened' if score > 800 else 'High Vibration' if score > 600 else 'Balanced'
 
     return jsonify({
         'score': score,
@@ -310,13 +294,12 @@ def past_life():
     past_lives = [
         {'era': 'Ancient Egypt', 'role': 'Priest/Priestess', 'lesson': 'Sacred knowledge'},
         {'era': 'Medieval Japan', 'role': 'Samurai', 'lesson': 'Honor'},
-        {'era': 'Renaissance', 'role': 'Artist', 'lesson': 'Creativity'},
-        {'era': 'Atlantis', 'role': 'Healer', 'lesson': 'Energy work'}
+        {'era': 'Renaissance', 'role': 'Artist', 'lesson': 'Creativity'}
     ]
 
     return jsonify(random.choice(past_lives))
 
-# Lucid Dream Trainer
+# Lucid Dream
 @app.route('/api/lucid/technique', methods=['POST'])
 def lucid_technique():
     techniques = [
@@ -331,7 +314,7 @@ def lucid_technique():
         'mantra': 'I am aware in my dreams'
     })
 
-# Manifestation Generator
+# Manifestation
 @app.route('/api/manifest/generate', methods=['POST'])
 def generate_manifestation():
     data = request.json
@@ -349,7 +332,7 @@ def generate_manifestation():
         'crystal': random.choice(['Clear Quartz', 'Amethyst', 'Rose Quartz'])
     })
 
-# Karma Calculator
+# Karma
 @app.route('/api/karma/calculate', methods=['POST'])
 def calculate_karma():
     data = request.json
@@ -373,7 +356,7 @@ def calculate_karma():
 # Weather
 @app.route('/api/weather/<city>')
 def get_weather(city):
-    conditions = ['☀️ Sunny', '🌙 Clear', '🌈 Rainbow', '✨ Stardust', '🍃 Breeze']
+    conditions = ['☀️ Sunny', '🌙 Clear', '🌈 Rainbow', '✨ Stardust']
 
     return jsonify({
         'city': city,
@@ -382,7 +365,7 @@ def get_weather(city):
         'energy': random.choice(['High', 'Calm', 'Vibrant'])
     })
 
-# Galactic Chatbot
+# Chatbot
 @app.route('/api/chatbot/message', methods=['POST'])
 def chatbot_message():
     data = request.json
@@ -391,19 +374,18 @@ def chatbot_message():
     responses = {
         'hello': 'Greetings, cosmic traveler! How may I assist you?',
         'help': 'I can help with dream interpretation, quantum navigation, aura reading, and more!',
-        'meaning': 'The meaning of life is to experience, learn, and love.',
         'universe': 'You are the universe experiencing itself.',
         'thanks': 'You are most welcome, cosmic friend!'
     }
 
-    response = responses.get(message, "I'm here to guide you on your cosmic journey. Try asking about dreams, the universe, or meaning!")
+    response = responses.get(message, "I'm here to guide you on your cosmic journey.")
 
     return jsonify({
         'response': response,
         'channel': random.choice(['Alpha Centauri', 'Sirius', 'Andromeda'])
     })
 
-# QR Generator
+# QR Code
 @app.route('/api/qr/generate', methods=['POST'])
 def generate_qr():
     data = request.json
@@ -447,6 +429,49 @@ def generate_tts():
 
     return jsonify({'url': f'/downloads/{filename}'})
 
+# School Management
+@app.route('/api/students', methods=['GET', 'POST'])
+def handle_students():
+    if request.method == 'POST':
+        data = request.json
+        student = Student(name=data['name'], class_name=data.get('class', ''))
+        db.session.add(student)
+        db.session.commit()
+        return jsonify({'id': student.id})
+
+    students = Student.query.all()
+    return jsonify([{'id': s.id, 'name': s.name, 'class': s.class_name, 'attendance': s.attendance} for s in students])
+
+# Hospital Management
+@app.route('/api/patients', methods=['GET', 'POST'])
+def handle_patients():
+    if request.method == 'POST':
+        data = request.json
+        patient = Patient(name=data['name'], disease=data.get('disease', ''), room=data.get('room', ''))
+        db.session.add(patient)
+        db.session.commit()
+        return jsonify({'id': patient.id})
+
+    patients = Patient.query.all()
+    return jsonify([{'id': p.id, 'name': p.name, 'disease': p.disease, 'room': p.room} for p in patients])
+
+# Finance Tracker
+@app.route('/api/transactions', methods=['GET', 'POST'])
+def handle_transactions():
+    if request.method == 'POST':
+        data = request.json
+        transaction = Transaction(amount=data['amount'], category=data.get('category', 'General'))
+        db.session.add(transaction)
+        db.session.commit()
+        return jsonify({'id': transaction.id})
+
+    transactions = Transaction.query.all()
+    total = sum(t.amount for t in transactions)
+    return jsonify({
+        'balance': total,
+        'transactions': [{'amount': t.amount, 'category': t.category, 'date': t.date.isoformat()} for t in transactions[-10:]]
+    })
+
 # To-Do List
 @app.route('/api/todos', methods=['GET', 'POST'])
 def handle_todos():
@@ -469,33 +494,7 @@ def toggle_todo(todo_id):
         return jsonify({'completed': todo.completed})
     return jsonify({'error': 'Not found'}), 404
 
-# Students
-@app.route('/api/students', methods=['GET', 'POST'])
-def handle_students():
-    if request.method == 'POST':
-        data = request.json
-        student = Student(name=data['name'], class_name=data.get('class', ''))
-        db.session.add(student)
-        db.session.commit()
-        return jsonify({'id': student.id})
-
-    students = Student.query.all()
-    return jsonify([{'id': s.id, 'name': s.name, 'class': s.class_name, 'attendance': s.attendance} for s in students])
-
-# Patients
-@app.route('/api/patients', methods=['GET', 'POST'])
-def handle_patients():
-    if request.method == 'POST':
-        data = request.json
-        patient = Patient(name=data['name'], disease=data.get('disease', ''), room=data.get('room', ''))
-        db.session.add(patient)
-        db.session.commit()
-        return jsonify({'id': patient.id})
-
-    patients = Patient.query.all()
-    return jsonify([{'id': p.id, 'name': p.name, 'disease': p.disease, 'room': p.room} for p in patients])
-
-# Blog
+# Blog CMS
 @app.route('/api/blog/posts', methods=['GET', 'POST'])
 def handle_blog():
     if request.method == 'POST':
@@ -508,24 +507,7 @@ def handle_blog():
     posts = BlogPost.query.order_by(BlogPost.date.desc()).all()
     return jsonify([{'id': p.id, 'title': p.title, 'content': p.content[:200], 'author': p.author, 'date': p.date.isoformat()} for p in posts])
 
-# Finance
-@app.route('/api/transactions', methods=['GET', 'POST'])
-def handle_transactions():
-    if request.method == 'POST':
-        data = request.json
-        transaction = Transaction(amount=data['amount'], category=data.get('category', 'General'))
-        db.session.add(transaction)
-        db.session.commit()
-        return jsonify({'id': transaction.id})
-
-    transactions = Transaction.query.all()
-    total = sum(t.amount for t in transactions)
-    return jsonify({
-        'balance': total,
-        'transactions': [{'amount': t.amount, 'category': t.category, 'date': t.date.isoformat()} for t in transactions[-10:]]
-    })
-
-# Passwords
+# Password Manager
 @app.route('/api/passwords', methods=['GET', 'POST'])
 def handle_passwords():
     if request.method == 'POST':
@@ -562,21 +544,7 @@ def redirect_short(code):
         return redirect(short.original_url)
     return 'Not found', 404
 
-# Snake Game Scores
-snake_scores = []
-
-@app.route('/api/snake/score', methods=['POST'])
-def save_snake_score():
-    data = request.json
-    snake_scores.append({'player': data.get('player', 'Player'), 'score': data.get('score', 0), 'date': datetime.now().isoformat()})
-    snake_scores.sort(key=lambda x: x['score'], reverse=True)
-    return jsonify({'status': 'success'})
-
-@app.route('/api/snake/scores', methods=['GET'])
-def get_snake_scores():
-    return jsonify(snake_scores[:10])
-
-# Tic Tac Toe
+# Tic Tac Toe Game
 game_board = [['']*3 for _ in range(3)]
 game_winner = None
 
@@ -613,6 +581,20 @@ def tic_tac_toe_reset():
     game_winner = None
     return jsonify({'board': game_board})
 
+# Snake Game Scores
+snake_scores = []
+
+@app.route('/api/snake/score', methods=['POST'])
+def save_snake_score():
+    data = request.json
+    snake_scores.append({'player': data.get('player', 'Player'), 'score': data.get('score', 0), 'date': datetime.now().isoformat()})
+    snake_scores.sort(key=lambda x: x['score'], reverse=True)
+    return jsonify({'status': 'success'})
+
+@app.route('/api/snake/scores', methods=['GET'])
+def get_snake_scores():
+    return jsonify(snake_scores[:10])
+
 # Download endpoint
 @app.route('/downloads/<filename>')
 def download_file(filename):
@@ -622,32 +604,11 @@ def download_file(filename):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-
         print("\n" + "="*60)
         print("🌌 ULTIMATE MEGA APP v6.0 - FULLY WORKING")
         print("="*60)
         print("📍 http://localhost:5000")
-        print("📱 Ready for Google Play deployment")
+        print("📱 Ready for deployment")
         print("="*60)
 
-    socketio.run(app, debug=False, host='0.0.0.0', port=5000)
-
-
-    # Add PWA manifest route
-    @app.route('/manifest.json')
-    def manifest():
-        return {
-            "name": "Ultimate Mega App",
-            "short_name": "MegaApp",
-            "start_url": "/",
-            "display": "standalone",
-            "background_color": "#0a0a2a",
-            "theme_color": "#667eea",
-            "icons": [
-                {
-                    "src": "/static/icon-192.png",
-                    "sizes": "192x192",
-                    "type": "image/png"
-                }
-            ]
-        }
+    socketio.run(app, debug=False, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)
